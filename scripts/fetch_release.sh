@@ -34,6 +34,6 @@ if [ -d "$SOURCE_DIR" ]; then
 fi  
   
 echo "Cloning ${CDDA_REPO} branch ${CDDA_BRANCH}..."  
-git clone --depth 1 --branch "$CDDA_BRANCH" "https://github.com/${CDDA_REPO}.git" "$SOURCE_DIR"
-  
+git clone --depth 1 --branch "$CDDA_BRANCH" "https://x-access-token:${FORK_TOKEN}@github.com/${CDDA_REPO}.git" "$SOURCE_DIR"
+
 echo "Source fetched successfully to: $SOURCE_DIR"
