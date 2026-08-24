@@ -162,3 +162,19 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY  
           echo "### Deployment" >> $GITHUB_STEP_SUMMARY  
           echo "Deployed to \`gh-pages\` branch - available at GitHub Pages" >> $GITHUB_STEP_SUMMARY
+
+      - name: Vendor source for indexing  
+        run: |  
+          # Work in a fresh clone so we never disturb the build working tree.  
+          TMP="$(mktemp -d)"  
+          git clone --no-checkout "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$TMP/repo"  
+          cd "$TMP/repo"  
+          git config user.name  'github-actions[bot]'  
+          git config user.email 'github-actions[bot]@users.noreply.github.com'  
+          git checkout --orphan cdda-src  
+          git reset --hard  
+          # Pull just the C++ engine from the source that the build already fetched.  
+          cp -r "$GITHUB_WORKSPACE/cdda-source/src" ./src  
+          git add -f src  
+          git commit -m "Vendor CDDA ${{ steps.get_tag.outputs.tag }} src for indexing" || echo "no changes"  
+          git push -f origin cdda-src
