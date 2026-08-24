@@ -95,6 +95,8 @@ jobs:
             ccache-  
   
       - name: Fetch CDDA release  
+        env:  
+          FORK_TOKEN: ${{ secrets.FORK_TOKEN }}  
         run: |  
           chmod +x scripts/fetch_release.sh  
           ./scripts/fetch_release.sh "${{ steps.get_tag.outputs.tag }}" 
