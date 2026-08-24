@@ -2,7 +2,7 @@
 set -e
 
 RELEASE_TAG="${1:-latest}"
-CDDA_REPO="CleverRaven/cataclysm-dda"
+CDDA_REPO="apkile78/Cataclysm-DDA-web-m-0.I"
 SOURCE_DIR="cdda-source"
 
 echo "Fetching CDDA release: $RELEASE_TAG"
