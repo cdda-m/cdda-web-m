@@ -57,25 +57,30 @@ jobs:
           sudo apt-get update  
           sudo apt-get install -y ccache  
           ccache --version  
+
+      - name: Cache emsdk  
+        id: cache-emsdk  
+        uses: actions/cache@v4  
+        with:  
+          path: ~/emsdk  
+          key: emsdk-${{ env.EMSCRIPTEN_VERSION }}
   
-      - name: Install Emscripten (clean)  
+      - name: Install Emscripten  
         run: |  
           cd ~  
-          # Always start from a completely fresh emsdk. A half-restored or  
-          # partially-installed toolchain is what caused the recurring  
-          # "emcc ... os.execv FileNotFoundError" on the freetype/imgui ports.  
-          rm -rf emsdk  
-          git clone https://github.com/emscripten-core/emsdk.git  
-          cd emsdk  
-          ./emsdk install ${{ env.EMSCRIPTEN_VERSION }}  
-          ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}  
-          # CDDA's build turns on Emscripten's built-in ccache tool when  
-          # CCACHE=1. That tool must be installed here or the build dies at  
-          # "emsdk activate ccache-git-emscripten-64bit".  
-          ./emsdk install ccache-git-emscripten-64bit  
+          if [ ! -x "emsdk/emsdk" ]; then  
+            rm -rf emsdk  
+            git clone https://github.com/emscripten-core/emsdk.git  
+            cd emsdk  
+            ./emsdk install ${{ env.EMSCRIPTEN_VERSION }}  
+            ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}  
+            ./emsdk install ccache-git-emscripten-64bit  
+          else  
+            cd emsdk  
+            ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}  
+          fi  
           source ./emsdk_env.sh  
-          # Fail early (before the long compile) if the toolchain is broken.  
-          emcc --version  
+          emcc --version
   
       # Save/restore ccache's cache box between runs. This is what makes the  
       # SECOND and later builds fast (first build is still full-length).  
@@ -83,20 +88,11 @@ jobs:
         uses: actions/cache@v4  
         with:  
           path: ~/.ccache  
-          key: ccache-${{ steps.get_tag.outputs.tag }}-${{ env.EMSCRIPTEN_VERSION }}  
+          key: ccache-${{ steps.get_tag.outputs.tag }}-${{ env.EMSCRIPTEN_VERSION }}-${{ github.run_id }}  
           restore-keys: |  
+            ccache-${{ steps.get_tag.outputs.tag }}-${{ env.EMSCRIPTEN_VERSION }}-  
             ccache-${{ steps.get_tag.outputs.tag }}-  
             ccache-  
-  
-      - name: Cache build artifacts  
-        uses: actions/cache@v4  
-        with:  
-          path: |  
-            build-cache  
-            cdda-source  
-          key: cdda-build-${{ steps.get_tag.outputs.tag }}-${{ env.BUILD_TYPE }}-${{ env.BUILD_TILES }}-${{ env.BUILD_SOUND }}  
-          restore-keys: |  
-            cdda-build-${{ steps.get_tag.outputs.tag }}-  
   
       - name: Fetch CDDA release  
         run: |  
